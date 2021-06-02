@@ -14,6 +14,6 @@ Releases are found in Maven-Central repository and can easliy be used by adding 
 Or in karaf
 
 	install -s mvn:javax.persistence/javax.persistence-api/2.2
-	install -s mvn:org.notima.bg/bankgiro-api
+	install -s mvn:org.notima/util
 	install -s mvn:org.notima.generic/businessobjects
 	
