@@ -8,7 +8,6 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.notima.bg.BgUtil;
 import org.notima.generic.businessobjects.util.InvalidTaxIdFormatException;
 import org.notima.generic.businessobjects.util.TaxIdFormatter;
 import org.notima.generic.businessobjects.util.TaxIdStructure;
