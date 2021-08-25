@@ -2,8 +2,8 @@
 <XMI xmi.version="1.2" timestamp="2021-06-16T15:25:01" verified="false" xmlns:UML="http://schema.omg.org/spec/UML/1.4">
  <XMI.header>
   <XMI.documentation>
-   <XMI.exporter>umbrello uml modeller 2.32.0 http://umbrello.kde.org</XMI.exporter>
-   <XMI.exporterVersion>1.7.3</XMI.exporterVersion>
+   <XMI.exporter>umbrello uml modeller http://umbrello.kde.org</XMI.exporter>
+   <XMI.exporterVersion>1.6.17</XMI.exporterVersion>
    <XMI.exporterEncoding>UnicodeUTF8</XMI.exporterEncoding>
   </XMI.documentation>
   <XMI.metamodel xmi.version="1.4" xmi.name="UML" href="UML.xml"/>
