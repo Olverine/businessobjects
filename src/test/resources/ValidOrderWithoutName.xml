@@ -12,7 +12,6 @@
         </addressOfficial>
         <company>false</company>
         <emailInvoice>false</emailInvoice>
-        <name>Person Per</name>
         <taxId>yymmddnnnn</taxId>
         <bPartnerId>0</bPartnerId>
     </billBpartner>
@@ -27,7 +26,6 @@
     </billLocation>
     <billPerson>
         <email>perperson@void.org</email>
-        <name></name>
         <personId>0</personId>
         <phone>0735400491</phone>
     </billPerson>
@@ -43,7 +41,6 @@
         </addressOfficial>
         <company>false</company>
         <emailInvoice>false</emailInvoice>
-        <name>Person Per</name>
         <taxId>yymmddnnnn</taxId>
         <bPartnerId>0</bPartnerId>
     </bpartner>
