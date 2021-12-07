@@ -7,6 +7,11 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name = "payment")
 public class Payment<P> {
 
+	public static enum PaymentType {
+		RECEIVABLE,
+		PAYABLE
+	};
+	
 	private String	businessPartnerKey;
 	private BusinessPartner<?>	businessPartner;
 	private String	currency;
@@ -16,12 +21,15 @@ public class Payment<P> {
 	private String	matchedInvoiceNo;
 	private boolean	customerPayment;
 	private Double	amount;
+	private Double  originalAmount;
 	private String	accountNo;
 	private String	comment;
 	private java.util.Date paymentDate;
 	private Double	acctAmount;
 	private String	acctCurrency;
 	private Location	location;
+	private String	destinationSystemReference;
+	private String	destinationSystemReferenceField;
 	private TransactionReference	transactionReference;
 	private transient P nativePayment;
 	
@@ -38,6 +46,14 @@ public class Payment<P> {
 	}
 	public void setBusinessPartner(BusinessPartner<?> businessPartner) {
 		this.businessPartner = businessPartner;
+	}
+	
+	public Payment<P> addPaymentWriteOff(PaymentWriteOff pwo) {
+		if (paymentWriteOffs==null) {
+			paymentWriteOffs = new PaymentWriteOffs();
+		}
+		paymentWriteOffs.add(pwo);
+		return this;
 	}
 	
 	@Transient
@@ -88,12 +104,36 @@ public class Payment<P> {
 	public void setCustomerPayment(boolean customerPayment) {
 		this.customerPayment = customerPayment;
 	}
+
+	/**
+	 * Original amount is the transaction amount without any fees deducted. Original amount
+	 * might not be the amount that actually lands on the bank account.
+	 * If original amount is not set, the amount (from getAmount) is returned.
+	 * 
+	 * @return		The original amount.
+	 */
+	public Double getOriginalAmount() {
+		if (originalAmount==null && amount!=null) return amount;
+		return originalAmount;
+	}
+	public void setOriginalAmount(Double originalAmount) {
+		this.originalAmount = originalAmount;
+	}
+
+	/**
+	 * Amount is the amount that actually lands / withdraws from the bank account.
+	 * The amount is not set, the originalAmount (from getOriginalAmount) is returned. 
+	 * 
+	 * @return
+	 */
 	public Double getAmount() {
+		if (amount==null && originalAmount!=null) return originalAmount;
 		return amount;
 	}
 	public void setAmount(Double amount) {
 		this.amount = amount;
 	}
+	
 	public String getAccountNo() {
 		return accountNo;
 	}
@@ -149,6 +189,29 @@ public class Payment<P> {
 	}
 	public void setNativePayment(P nativePayment) {
 		this.nativePayment = nativePayment;
+	}
+	
+	public String getDestinationSystemReference() {
+		return destinationSystemReference;
+	}
+	public void setDestinationSystemReference(String destinationSystemReference) {
+		this.destinationSystemReference = destinationSystemReference;
+	}
+	public String getDestinationSystemReferenceField() {
+		return destinationSystemReferenceField;
+	}
+	public void setDestinationSystemReferenceField(String destinationSystemReferenceField) {
+		this.destinationSystemReferenceField = destinationSystemReferenceField;
+	}
+	public void calculateAmountDeductingWriteOffsFromOriginalAmount() {
+		if (originalAmount==null) {
+			originalAmount = new Double(amount);
+		}
+		if (paymentWriteOffs!=null && paymentWriteOffs.getPaymentWriteOff()!=null) {
+			for (PaymentWriteOff pwo : paymentWriteOffs.getPaymentWriteOff()) {
+				amount += pwo.getAmount();
+			}
+		}
 	}
 	
 	public String toString() {
