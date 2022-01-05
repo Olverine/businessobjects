@@ -1,6 +1,7 @@
 package org.notima.generic.businessobjects;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.notima.generic.businessobjects.exception.CurrencyMismatchException;
@@ -18,7 +19,7 @@ public class PaymentBatch {
 	private TaxSubjectIdentifier	batchOwner;
 	private BankAccountDetail		bankAccount;
 	private List<Payment<?>> 		payments;
-	private Payment.PaymentType		paymenType;				
+	private Payment.PaymentType		paymentType;				
 	private String					source;
 	private List<PayoutLine>		payoutLines;
 	
@@ -53,17 +54,23 @@ public class PaymentBatch {
 		this.source = source;
 	}
 	
-	public Payment.PaymentType getPaymenType() {
-		return paymenType;
+	public Payment.PaymentType getPaymentType() {
+		return paymentType;
 	}
-	public void setPaymenType(Payment.PaymentType paymenType) {
-		this.paymenType = paymenType;
+	public void setPaymentType(Payment.PaymentType paymenType) {
+		this.paymentType = paymenType;
+	}
+	
+	public Date getFirstPaymentDate() {
+		if (!hasPayments()) return null;
+		return payments.get(0).getPaymentDate();
 	}
 	
 	public List<PayoutLine> retrievePayoutLines() throws DateMismatchException, CurrencyMismatchException {
 		
 		List<PayoutLine> result = new ArrayList<PayoutLine>();
 		PayoutLine pl = new PayoutLine();
+		pl.setDescription(source);
 		result.add(pl);
 		
 		// Make sure we have payments to process
@@ -76,6 +83,8 @@ public class PaymentBatch {
 		}
 		
 		payoutLines = result;
+		
+		
 		
 		return payoutLines;
 	}

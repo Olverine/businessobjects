@@ -56,6 +56,17 @@ public class Payment<P> {
 		return this;
 	}
 	
+	public boolean hasPaymentWriteOffs() {
+		return paymentWriteOffs!=null && paymentWriteOffs.getPaymentWriteOff()!=null && paymentWriteOffs.getPaymentWriteOff().size()>0;
+	}
+	
+	public void addToAmountAndOriginalAmount(double add) {
+		if (amount==null) amount = new Double(0);
+		if (originalAmount==null) originalAmount = new Double(0);
+		amount += add;
+		originalAmount += add;
+	}
+	
 	@Transient
 	public String getPayerName() {
 		return businessPartner!=null ? businessPartner.getName() : "";
@@ -209,7 +220,7 @@ public class Payment<P> {
 		}
 		if (paymentWriteOffs!=null && paymentWriteOffs.getPaymentWriteOff()!=null) {
 			for (PaymentWriteOff pwo : paymentWriteOffs.getPaymentWriteOff()) {
-				amount += pwo.getAmount();
+				amount -= pwo.getAmount();
 			}
 		}
 	}
