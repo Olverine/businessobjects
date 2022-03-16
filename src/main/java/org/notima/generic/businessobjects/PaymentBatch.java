@@ -22,7 +22,9 @@ public class PaymentBatch {
 	private Payment.PaymentType		paymentType;				
 	private String					source;
 	private List<PayoutLine>		payoutLines;
+	private String					voucherSeries;
 	
+	private String generalLedgerUnknownTrxAccount;
 	
 	/**
 	 * The Batch Owner is the tax subject that this file belongs to.
@@ -106,6 +108,21 @@ public class PaymentBatch {
 	public boolean isEmpty() {
 		return (!hasPayments() && !hasPayouts());
 	}
+	
+	public String getGeneralLedgerUnknownTrxAccount() {
+		return generalLedgerUnknownTrxAccount;
+	}
+	public void setGeneralLedgerUnknownTrxAccount(String generalLedgerUnknownTrxAccount) {
+		this.generalLedgerUnknownTrxAccount = generalLedgerUnknownTrxAccount;
+	}
+	
+	public String getVoucherSeries() {
+		return voucherSeries;
+	}
+	public void setVoucherSeries(String voucherSeries) {
+		this.voucherSeries = voucherSeries;
+	}
+	
 	
 	
 }
