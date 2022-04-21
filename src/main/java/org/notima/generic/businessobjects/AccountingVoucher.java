@@ -1,5 +1,6 @@
 package org.notima.generic.businessobjects;
 
+import java.beans.Transient;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDate;
@@ -31,6 +32,7 @@ public class AccountingVoucher {
 	private String			projectCode;
 	private BigDecimal		totalCredit;
 	private	BigDecimal		totalDebet;
+	private String			comments;
 	
 	private Integer			precision = 2;
 	
@@ -97,6 +99,10 @@ public class AccountingVoucher {
 		this.description = description;
 	}
 
+	public AccountingVoucherIdentification createIdentification() {
+		return new AccountingVoucherIdentification(voucherSeries, voucherNo);
+	}
+	
 	public String getRegBy() {
 		return regBy;
 	}
@@ -456,5 +462,15 @@ public class AccountingVoucher {
 		}
 		return bd;
 	}
+
+	public String getComments() {
+		return comments;
+	}
+
+	public void setComments(String comments) {
+		this.comments = comments;
+	}
+
+	
 	
 }
