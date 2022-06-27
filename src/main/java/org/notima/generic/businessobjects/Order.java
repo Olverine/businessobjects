@@ -60,6 +60,7 @@ public class Order<O> implements OrderInvoice {
 	private String	ourCustomerNo;
 	private String	externalReference1;
 	private String	externalReference2;
+	private String	yourOrderNumber;
 	private boolean	salesOrder;
 	private int	   roundingDecimals = 2;
 	private String	deliveryRule;
@@ -72,6 +73,28 @@ public class Order<O> implements OrderInvoice {
 	private String	status;
 	
 	private transient O nativeOrder;
+	
+	/**
+	 * Short summary of order
+	 * 
+	 * @return
+	 */
+	public String printOrderInfo() {
+		StringBuffer buf = new StringBuffer();
+		if (getDocumentKey()!=null) {
+			buf.append(getDocumentKey());
+		} else if (getOrderKey()!=null) {
+			buf.append(getOrderKey());
+		}
+		if (getBusinessPartner()!=null && getBusinessPartner().getName()!=null) {
+			if (buf.length()>0) buf.append(" ");
+			buf.append(getBusinessPartner().getName());
+		}
+		if (buf.length()>0) buf.append(" ");
+		buf.append(" with total " + getGrandTotal());
+		return buf.toString();
+	}
+	
 	
 	public String toString() {
 		StringBuffer buf = new StringBuffer();
@@ -455,10 +478,12 @@ public class Order<O> implements OrderInvoice {
 		vatTotal = 0.0;
 		netTotal = 0.0;
 		
-		for (OrderLine line : lines) {
-			total += line.calculateLineTotalIncTax(roundingDecimals);
-			vatTotal += line.getTaxAmount();
-			netTotal += line.getLineNet();
+		if (lines!=null) {
+			for (OrderLine line : lines) {
+				total += line.calculateLineTotalIncTax(roundingDecimals);
+				vatTotal += line.getTaxAmount();
+				netTotal += line.getLineNet();
+			}
 		}
 		
 		total = InvoiceLine.round(total, roundingDecimals);
@@ -561,6 +586,10 @@ public class Order<O> implements OrderInvoice {
 		TaxSummary ts;
 		
 		for (OrderLine il : (List<OrderLine>)getLines()) {
+			if (il.calculateLineTotalIncTax(roundingDecimals)==0) {
+				// Don't consider lines amounting to zero.
+				continue;
+			}
 			taxKey = il.getTaxKey();
 			if (taxKey==null) {
 				taxKey = new Double(il.getTaxPercent()).toString();
@@ -600,6 +629,14 @@ public class Order<O> implements OrderInvoice {
 		
 	}
 	
+	public String getYourOrderNumber() {
+		return yourOrderNumber;
+	}
+
+	public void setYourOrderNumber(String yourOrderNumber) {
+		this.yourOrderNumber = yourOrderNumber;
+	}
+
 	@XmlTransient
 	public boolean isValidOrder() {
 		return hasValidBusinessPartner() && hasOrderLines();
