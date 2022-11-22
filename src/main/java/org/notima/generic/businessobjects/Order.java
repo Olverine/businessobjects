@@ -1,5 +1,6 @@
 package org.notima.generic.businessobjects;
 
+import java.beans.Transient;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -17,7 +18,6 @@ import javax.persistence.OneToMany;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-import org.notima.generic.businessobjects.TaxSummary;
 import org.notima.generic.ifacebusinessobjects.FactoringReservation;
 import org.notima.generic.ifacebusinessobjects.OrderInvoice;
 import org.notima.generic.ifacebusinessobjects.OrderInvoiceLine;
@@ -70,7 +70,8 @@ public class Order<O> implements OrderInvoice {
 	private List<KeyValue> attributes = new ArrayList<KeyValue>();
 	@ManyToOne
 	private FactoringReservation factoringReservation;	
-	private String	status;
+	private OrderStatus	status;
+	private String statusComment;
 	
 	private transient O nativeOrder;
 	
@@ -110,6 +111,10 @@ public class Order<O> implements OrderInvoice {
 	
 	public void addOrderLine(OrderLine line) {
 		lines.add(line);
+	}
+	
+	public void addAttribute(String attributeName, Object value) {
+		attributes.add(new KeyValue(attributeName, value));
 	}
 	
 	public String getPaymentTermKey() {
@@ -357,6 +362,27 @@ public class Order<O> implements OrderInvoice {
 		return attributes;
 	}
 
+	public List<KeyValue> getAttributesWithKey(String key) {
+		List<KeyValue> result = new ArrayList<KeyValue>();
+		if (key==null) return result;
+		for (KeyValue attr : attributes) {
+			if (key.equals(attr.getKey())) {
+				result.add(attr);
+			}
+		}
+		return result;
+	}
+	
+	public Object getFirstAttributeWithKey(String key) {
+		if (key==null) return null;
+		for (KeyValue attr : attributes) {
+			if (key.equals(attr.getKey())) {
+				return attr.getObject();
+			}
+		}
+		return null;
+	}
+	
 	public void setAttributes(List<KeyValue> attributes) {
 		this.attributes = attributes;
 	}
@@ -452,12 +478,19 @@ public class Order<O> implements OrderInvoice {
 	}
 
 	public String getStatus() {
-		return status;
+		if (status==null) return null;
+		return status.toString();
 	}
 
-	public void setStatus(String status) {
+	public void setStatus(String statusString) {
+		this.status = OrderStatus.valueOf(statusString);
+	}
+
+	@Transient
+	public void setStatusEnum(OrderStatus status) {
 		this.status = status;
 	}
+	
 
 	public O getNativeOrder() {
 		return nativeOrder;
@@ -511,7 +544,7 @@ public class Order<O> implements OrderInvoice {
 			ts = new TaxSummary();
 			ts.setTaxBase(amountIncTax);
 			ts.setTaxAmount(0);
-			ts.setKey("?");
+			ts.setKey(Tax.TAX_KEY_UNKNOWN);
 			ts.setRate(0);
 			result.add(ts);
 			return result;
@@ -563,7 +596,7 @@ public class Order<O> implements OrderInvoice {
 			ts = new TaxSummary();
 			ts.setTaxBase(amountIncTax - totalAdded);
 			ts.setTaxAmount(0);
-			ts.setKey("?");
+			ts.setKey(Tax.TAX_KEY_UNKNOWN);
 			ts.setRate(0);
 			result.add(ts);
 		}
@@ -656,8 +689,35 @@ public class Order<O> implements OrderInvoice {
 		
 		if (this.status==null) return false;
 		
-		return this.status.equals(status);
+		return this.status.toString().equals(status);
 	}
-	
+
+
+	public String getStatusComment() {
+		return statusComment;
+	}
+
+
+	public void setStatusComment(String statusComment) {
+		this.statusComment = statusComment;
+	}
+
+	/**
+	 * Appends to status comment if there's already an existing comment. A semicolon is prepended if there's an existing comment.
+	 * Sets status comment if no one exists.
+	 * @param comment
+	 */
+	public void appendStatusComment(String comment) {
+		if (statusComment==null) {
+			statusComment = comment;
+			return;
+		}
+		if (statusComment.trim().length()>0) {
+			statusComment += "; " + comment; 
+		} else {
+			statusComment = comment;
+		}
+		
+	}
 	
 }
