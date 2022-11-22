@@ -1,5 +1,6 @@
 package org.notima.generic.businessobjects;
 
+import java.beans.Transient;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -17,7 +18,6 @@ import javax.persistence.OneToMany;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-import org.notima.generic.businessobjects.TaxSummary;
 import org.notima.generic.ifacebusinessobjects.FactoringReservation;
 import org.notima.generic.ifacebusinessobjects.OrderInvoice;
 import org.notima.generic.ifacebusinessobjects.OrderInvoiceLine;
@@ -30,6 +30,7 @@ public class Order<O> implements OrderInvoice {
 	@GeneratedValue
 	private Integer id;
 	
+	private String documentKey;
 	private String orderKey;
 	private String paymentTermKey;
 	private String paymentRule;
@@ -59,6 +60,7 @@ public class Order<O> implements OrderInvoice {
 	private String	ourCustomerNo;
 	private String	externalReference1;
 	private String	externalReference2;
+	private String	yourOrderNumber;
 	private boolean	salesOrder;
 	private int	   roundingDecimals = 2;
 	private String	deliveryRule;
@@ -68,9 +70,32 @@ public class Order<O> implements OrderInvoice {
 	private List<KeyValue> attributes = new ArrayList<KeyValue>();
 	@ManyToOne
 	private FactoringReservation factoringReservation;	
-	private String	status;
+	private OrderStatus	status;
+	private String statusComment;
 	
 	private transient O nativeOrder;
+	
+	/**
+	 * Short summary of order
+	 * 
+	 * @return
+	 */
+	public String printOrderInfo() {
+		StringBuffer buf = new StringBuffer();
+		if (getDocumentKey()!=null) {
+			buf.append(getDocumentKey());
+		} else if (getOrderKey()!=null) {
+			buf.append(getOrderKey());
+		}
+		if (getBusinessPartner()!=null && getBusinessPartner().getName()!=null) {
+			if (buf.length()>0) buf.append(" ");
+			buf.append(getBusinessPartner().getName());
+		}
+		if (buf.length()>0) buf.append(" ");
+		buf.append(" with total " + getGrandTotal());
+		return buf.toString();
+	}
+	
 	
 	public String toString() {
 		StringBuffer buf = new StringBuffer();
@@ -86,6 +111,10 @@ public class Order<O> implements OrderInvoice {
 	
 	public void addOrderLine(OrderLine line) {
 		lines.add(line);
+	}
+	
+	public void addAttribute(String attributeName, Object value) {
+		attributes.add(new KeyValue(attributeName, value));
 	}
 	
 	public String getPaymentTermKey() {
@@ -196,7 +225,7 @@ public class Order<O> implements OrderInvoice {
 
 	@Override
 	public String getDocumentKey() {
-		return getOrderKey();
+		return documentKey;
 	}
 
 	@Override
@@ -215,8 +244,7 @@ public class Order<O> implements OrderInvoice {
 	
 	@Override
 	public void setDocumentKey(String key) {
-		setOrderKey(key);
-		
+		documentKey = key;
 	}
 
 	@Override
@@ -334,6 +362,27 @@ public class Order<O> implements OrderInvoice {
 		return attributes;
 	}
 
+	public List<KeyValue> getAttributesWithKey(String key) {
+		List<KeyValue> result = new ArrayList<KeyValue>();
+		if (key==null) return result;
+		for (KeyValue attr : attributes) {
+			if (key.equals(attr.getKey())) {
+				result.add(attr);
+			}
+		}
+		return result;
+	}
+	
+	public Object getFirstAttributeWithKey(String key) {
+		if (key==null) return null;
+		for (KeyValue attr : attributes) {
+			if (key.equals(attr.getKey())) {
+				return attr.getObject();
+			}
+		}
+		return null;
+	}
+	
 	public void setAttributes(List<KeyValue> attributes) {
 		this.attributes = attributes;
 	}
@@ -429,12 +478,19 @@ public class Order<O> implements OrderInvoice {
 	}
 
 	public String getStatus() {
-		return status;
+		if (status==null) return null;
+		return status.toString();
 	}
 
-	public void setStatus(String status) {
+	public void setStatus(String statusString) {
+		this.status = OrderStatus.valueOf(statusString);
+	}
+
+	@Transient
+	public void setStatusEnum(OrderStatus status) {
 		this.status = status;
 	}
+	
 
 	public O getNativeOrder() {
 		return nativeOrder;
@@ -455,10 +511,12 @@ public class Order<O> implements OrderInvoice {
 		vatTotal = 0.0;
 		netTotal = 0.0;
 		
-		for (OrderLine line : lines) {
-			total += line.calculateLineTotalIncTax(roundingDecimals);
-			vatTotal += line.getTaxAmount();
-			netTotal += line.getLineNet();
+		if (lines!=null) {
+			for (OrderLine line : lines) {
+				total += line.calculateLineTotalIncTax(roundingDecimals);
+				vatTotal += line.getTaxAmount();
+				netTotal += line.getLineNet();
+			}
 		}
 		
 		total = InvoiceLine.round(total, roundingDecimals);
@@ -486,7 +544,7 @@ public class Order<O> implements OrderInvoice {
 			ts = new TaxSummary();
 			ts.setTaxBase(amountIncTax);
 			ts.setTaxAmount(0);
-			ts.setKey("?");
+			ts.setKey(Tax.TAX_KEY_UNKNOWN);
 			ts.setRate(0);
 			result.add(ts);
 			return result;
@@ -538,7 +596,7 @@ public class Order<O> implements OrderInvoice {
 			ts = new TaxSummary();
 			ts.setTaxBase(amountIncTax - totalAdded);
 			ts.setTaxAmount(0);
-			ts.setKey("?");
+			ts.setKey(Tax.TAX_KEY_UNKNOWN);
 			ts.setRate(0);
 			result.add(ts);
 		}
@@ -561,6 +619,10 @@ public class Order<O> implements OrderInvoice {
 		TaxSummary ts;
 		
 		for (OrderLine il : (List<OrderLine>)getLines()) {
+			if (il.calculateLineTotalIncTax(roundingDecimals)==0) {
+				// Don't consider lines amounting to zero.
+				continue;
+			}
 			taxKey = il.getTaxKey();
 			if (taxKey==null) {
 				taxKey = new Double(il.getTaxPercent()).toString();
@@ -600,6 +662,14 @@ public class Order<O> implements OrderInvoice {
 		
 	}
 	
+	public String getYourOrderNumber() {
+		return yourOrderNumber;
+	}
+
+	public void setYourOrderNumber(String yourOrderNumber) {
+		this.yourOrderNumber = yourOrderNumber;
+	}
+
 	@XmlTransient
 	public boolean isValidOrder() {
 		return hasValidBusinessPartner() && hasOrderLines();
@@ -613,5 +683,41 @@ public class Order<O> implements OrderInvoice {
 		return lines!=null && lines.size()>0;
 	}
 	
+	public boolean hasStatus(String status) {
+		if (this.status==null && status==null)
+			return true;
+		
+		if (this.status==null) return false;
+		
+		return this.status.toString().equals(status);
+	}
+
+
+	public String getStatusComment() {
+		return statusComment;
+	}
+
+
+	public void setStatusComment(String statusComment) {
+		this.statusComment = statusComment;
+	}
+
+	/**
+	 * Appends to status comment if there's already an existing comment. A semicolon is prepended if there's an existing comment.
+	 * Sets status comment if no one exists.
+	 * @param comment
+	 */
+	public void appendStatusComment(String comment) {
+		if (statusComment==null) {
+			statusComment = comment;
+			return;
+		}
+		if (statusComment.trim().length()>0) {
+			statusComment += "; " + comment; 
+		} else {
+			statusComment = comment;
+		}
+		
+	}
 	
 }

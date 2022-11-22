@@ -1,17 +1,25 @@
 package org.notima.generic.businessobjects;
 
+import java.beans.Transient;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import io.github.threetenjaxb.core.LocalDateTimeXmlAdapter;
 import io.github.threetenjaxb.core.LocalDateXmlAdapter;
 
+/**
+ * A general accounting voucher.
+ * 
+ * @author daniel
+ *
+ */
 public class AccountingVoucher {
 
 	private LocalDate		acctDate;
@@ -24,6 +32,7 @@ public class AccountingVoucher {
 	private String			projectCode;
 	private BigDecimal		totalCredit;
 	private	BigDecimal		totalDebet;
+	private String			comments;
 	
 	private Integer			precision = 2;
 	
@@ -90,6 +99,10 @@ public class AccountingVoucher {
 		this.description = description;
 	}
 
+	public AccountingVoucherIdentification createIdentification() {
+		return new AccountingVoucherIdentification(voucherSeries, voucherNo);
+	}
+	
 	public String getRegBy() {
 		return regBy;
 	}
@@ -188,6 +201,47 @@ public class AccountingVoucher {
 	}
 	
 	/**
+	 * Merges all fromTypes into the toType. The description is taken from the.
+	 * 
+	 * @param 	fromTypes			The types to merge from.
+	 * @param 	toType				The type to merge to.
+	 * @param	lineDescription		A description on the new merged line.
+	 * @return
+	 */
+	public int mergeAccountTypesToAccountType(Set<String> fromTypes, String toType, String lineDescription) {
+		int linesMerged = 0;
+		
+		if (lines==null || fromTypes==null || toType==null) return linesMerged;
+		
+		BigDecimal mergeBalance = new BigDecimal(0);
+		
+		List<AccountingVoucherLine> linesToMerge = new ArrayList<AccountingVoucherLine>();
+		for (AccountingVoucherLine line : lines) {
+			if (fromTypes.contains(line.getAcctType())) {
+				linesToMerge.add(line);
+				mergeBalance = mergeBalance.add(line.getBalance());
+			}
+		}
+
+		// Remove the lines that have been merged
+		for (AccountingVoucherLine rmLine : linesToMerge) {
+			lines.remove(rmLine);
+		}
+
+		// Add the merged line (unless the merged lines cancel eachother out).
+		if (mergeBalance.signum()!=0) {
+			// Create a merge row
+			AccountingVoucherLine mergedRow = new AccountingVoucherLine();
+			mergedRow.setAcctType(toType);
+			mergedRow.setDescription(lineDescription);
+			mergedRow.setBalance(mergeBalance);
+			lines.add(mergedRow);
+		}
+		
+		return linesMerged;
+	}
+	
+	/**
 	 * 
 	 * @return	True if all voucher lines has an account no
 	 */
@@ -204,6 +258,29 @@ public class AccountingVoucher {
 		}
 		
 		return result;
+	}
+	
+	/**
+	 * Remaps all occurrances of accountType and taxKey to toAcct
+	 * 
+	 * @param accountType
+	 * @param taxKey			Must not be null
+	 * @param toAcct
+	 */
+	public void remapAccountTypeAndTaxKey(String accountType, String taxKey, String toAcct) {
+
+		if (lines==null) return;
+		
+		for (AccountingVoucherLine l : lines) {
+			if (accountType==null) {
+				if (l.getAcctType()==null && taxKey.equals(l.getTaxKey())) {
+					l.setAcctNo(toAcct);
+				}
+			} else if (accountType.equals(l.getAcctType()) && taxKey.equals(l.getTaxKey())) {
+				l.setAcctNo(toAcct);
+			}
+		}
+		
 	}
 	
 	/**
@@ -408,5 +485,15 @@ public class AccountingVoucher {
 		}
 		return bd;
 	}
+
+	public String getComments() {
+		return comments;
+	}
+
+	public void setComments(String comments) {
+		this.comments = comments;
+	}
+
+	
 	
 }

@@ -1,6 +1,7 @@
 package org.notima.generic.businessobjects;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Properties;
 
 import org.notima.generic.ifacebusinessobjects.AccountingReportProvider;
@@ -128,6 +129,22 @@ public class BasicAccountingReportProvider implements AccountingReportProvider {
 	}
 
 
+	/**
+	 * Returns a specific accounting voucher
+	 * 
+	 * @param bp			For the business partner
+	 * @param period		In which accounting period the voucher is found.
+	 * @param series		The series
+	 * @param voucherNo		The voucher number (can be non-numerical)
+	 * @return				A voucher if found.
+	 * @throws Exception	If something goes wrong.
+	 */
+	@Override
+	public AccountingVoucher  getAccountingVoucher(BusinessPartner<?> bp, AccountingPeriod period, String series, String voucherNo) throws Exception {
+		return null;
+	}
+	
+	
 	@Override
 	public BalanceSheetReport getBalanceSheet(BusinessPartner<?> bp, AccountingPeriod period,
 			AccountingPeriod comparisonPeriod, Properties props)
@@ -136,6 +153,11 @@ public class BasicAccountingReportProvider implements AccountingReportProvider {
 		return null;
 	}
 
+	
+	@Override
+	public List<AccountingVoucher> getAccountingVoucherList(BusinessPartner<?> bp, AccountingPeriod ap, String series) throws Exception {
+		return null;
+	}
 	
 	
 }

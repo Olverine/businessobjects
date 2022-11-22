@@ -14,6 +14,7 @@ public class AccountingVoucherLine {
 	private String			costCenter;
 	private String			projectCode;
 	private Boolean	isService;
+	private Boolean deleted = Boolean.FALSE;
 	
 	public AccountingVoucherLine() {}
 	
@@ -80,6 +81,17 @@ public class AccountingVoucherLine {
 	public BigDecimal getBalance() {
 		return debitAmount.subtract(creditAmount);
 	}
+	
+	public void setBalance(BigDecimal balance) {
+		if (balance.signum()>0) {
+			debitAmount = balance;
+			creditAmount = BigDecimal.ZERO;
+		} else {
+			creditAmount = balance.negate();
+			debitAmount = BigDecimal.ZERO;
+		}
+	}
+	
 	public String getAcctType() {
 		return acctType;
 	}
@@ -114,6 +126,16 @@ public class AccountingVoucherLine {
 	public void setProjectCode(String projectCode) {
 		this.projectCode = projectCode;
 	}
+
+	public Boolean isDeleted() {
+		return deleted;
+	}
+
+	public void setDeleted(Boolean deleted) {
+		this.deleted = deleted;
+	}
+	
+	
 	
 	
 }
